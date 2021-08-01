@@ -31,7 +31,31 @@ We would migrate databases from SQL-Server on-prem to SQL Server on Azure VM, we
 
 **Screenshot for DB-Assessment**
 <img src="https://github.com/MElashkr/Azure-Labs/blob/main/Data-Migration/Pictures/Report%20of%20DB-Assessment.JPG" width="850" height="450">
+<img src="https://github.com/MElashkr/Azure-Labs/blob/main/Data-Migration/Pictures/Result%20migration%20for%20SQL-DB%20by%20DMA.JPG" width="750" height="180">
 
-TODO:
-How Handle Erros:<br/>
-Note a Script for create a sharefile on SQL-Server
+**How Handle Erros:**<br/>
+If you get this error during migration process in DMA: Migration Could not open a connection to SQL Server) The network path was not found.
+That because, you need to adapt the name of target server(in this case Windows Server 16 on Azure) on DMA. Create DNS name for vm on Azure and set it as Server name in **1 Specify Source and Target Step**
+And enable public internet in choose VM -> SQL-Configuration-> click Manage SQL Virtual machine -> Security Configuration -> choose SQL connectivity as public instead of private & enable SQL-Authenication
+
+**Define a share-file for both SQL-Servers**<br/>
+Create a file-share to Save backup in Blob-Storage on cloud 
+You get this info from "Connect" of file-share(right click and choose connect). Adapt xp_cmdshell based on your Configuration
+Run this DB-Script separate for both DB on-prem and azure SQL to define a file-share
+
+```
+SP_CONFIGURE 'show advanced options', 1
+RECONFIGURE
+
+SP_CONFIGURE 'xp_cmdshell', 1
+RECONFIGURE
+GO
+
+exec xp_cmdshell 'cmdkey /add:test.file.core.windows.net /user:localhost\test /pass:safafa....BgcTXgsploMY3cQ=='
+
+exec xp_cmdshell 'net use Z: \\test.file.core.windows.net\test-sharefile01 /persist:Yes'
+exec xp_cmdshell 'dir z:'
+
+SP_CONFIGURE 'xp_cmdshell', 0
+RECONFIGURE
+```
